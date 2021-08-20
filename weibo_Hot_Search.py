@@ -8,6 +8,7 @@ import requests
 from lxml import etree
 
 url = "https://s.weibo.com/top/summary?cate=realtimehot"
+link_domain = "https://s.weibo.com"
 headers={
     'Host': 's.weibo.com',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
@@ -19,11 +20,12 @@ headers={
 }
 
 r = requests.get(url,headers=headers)
+print(url)
 print(r.status_code)
 
 html_xpath = etree.HTML(r.text)
 data = html_xpath.xpath('//*[@id="pl_top_realtimehot"]/table/tbody/tr/td[2]')
-num = -1
+num = 0
 
 
 # 解决存储路径
@@ -51,8 +53,13 @@ f.close()
 
 for tr in (data):
     title = tr.xpath('./a/text()')
+    link = link_domain + tr.xpath('./a/@href')[0]
     hot_score = tr.xpath('./span/text()')
-    
+
+
+    if(len(hot_score)==0):
+        continue
+
     num += 1
 
     # 过滤第 0 条
@@ -61,9 +68,10 @@ for tr in (data):
     else:
         with open(path,'a') as f:
 
-            f.write('{} {}、{}\n\n'.format('###',num,title[0]))
+            f.write('{} {}、{}\n\n'.format('###',num,'['+title[0]+']('+link+')'))
+            # f.write('{} {}\n\n'.format('连接',link))
             f.write('{} {}\n\n'.format('微博当时热度为：',hot_score[0]))
          
         f.close()
 
-        print(num,title[0],'微博此时的热度为：',hot_score[0])
+        print(num,title[0],'连接',link,'微博此时的热度为：',hot_score[0])
